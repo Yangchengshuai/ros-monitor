@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROS Monitor WebSocket 测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .message-log { 
+            height: 300px; 
+            overflow-y: auto; 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            background-color: #f8f9fa;
+        }
+        button { 
+            padding: 8px 16px; 
+            margin: 5px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        button:hover { background-color: #0056b3; }
+        input[type="text"] { 
+            padding: 8px; 
+            margin: 5px; 
+            width: 200px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 ROS Monitor WebSocket 测试</h1>
+        
+        <div id="status" class="status disconnected">
+            状态: 未连接
+        </div>
+        
+        <div class="controls">
+            <button onclick="connect()">连接</button>
+            <button onclick="disconnect()">断开连接</button>
+            <button onclick="subscribeCamera()">订阅相机</button>
+            <button onclick="subscribeIMU()">订阅IMU</button>
+            <button onclick="subscribeLidar()">订阅激光雷达</button>
+            <button onclick="unsubscribeAll()">取消所有订阅</button>
+            <button onclick="clearLog()">清空日志</button>
+        </div>
+        
+        <div class="controls">
+            <input type="text" id="customMessage" placeholder="自定义消息" />
+            <button onclick="sendCustomMessage()">发送</button>
+        </div>
+        
+        <h3>📋 消息日志</h3>
+        <div id="messageLog" class="message-log"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        const clientId = 'test_client_' + Date.now();
+        
+        function updateStatus(message, connected) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = '状态: ' + message;
+            statusEl.className = 'status ' + (connected ? 'connected' : 'disconnected');
+        }
+        
+        function addToLog(message, type = 'info') {
+            const logEl = document.getElementById('messageLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logEntry.style.color = type === 'error' ? 'red' : type === 'sent' ? 'blue' : 'black';
+            logEl.appendChild(logEntry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addToLog('已经连接，无需重复连接', 'error');
+                return;
+            }
+            
+            const wsUrl = `ws://localhost:8001/ws/${clientId}`;
+            addToLog(`正在连接到: ${wsUrl}`);
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function(event) {
+                updateStatus('已连接', true);
+                addToLog('✅ WebSocket 连接成功');
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    addToLog(`📨 收到消息: ${JSON.stringify(data, null, 2)}`);
+                } catch (e) {
+                    addToLog(`📨 收到原始消息: ${event.data}`);
+                }
+            };
+            
+            ws.onclose = function(event) {
+                updateStatus('连接已关闭', false);
+                addToLog(`❌ 连接关闭 (code: ${event.code})`);
+            };
+            
+            ws.onerror = function(error) {
+                updateStatus('连接错误', false);
+                addToLog(`❌ WebSocket 错误: ${error}`, 'error');
+            };
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                updateStatus('手动断开连接', false);
+                addToLog('🔌 手动断开连接');
+            }
+        }
+        
+        function sendMessage(message) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addToLog('❌ 未连接，无法发送消息', 'error');
+                return;
+            }
+            
+            const msgStr = JSON.stringify(message);
+            ws.send(msgStr);
+            addToLog(`📤 发送消息: ${msgStr}`, 'sent');
+        }
+        
+        function subscribeCamera() {
+            sendMessage({
+                type: 'subscribe',
+                timestamp: new Date().toISOString(),
+                data: { topics: ['camera'] }
+            });
+        }
+        
+        function subscribeIMU() {
+            sendMessage({
+                type: 'subscribe',
+                timestamp: new Date().toISOString(),
+                data: { topics: ['imu'] }
+            });
+        }
+        
+        function subscribeLidar() {
+            sendMessage({
+                type: 'subscribe',
+                timestamp: new Date().toISOString(),
+                data: { topics: ['lidar'] }
+            });
+        }
+        
+        function unsubscribeAll() {
+            sendMessage({
+                type: 'unsubscribe',
+                timestamp: new Date().toISOString(),
+                data: { topics: ['camera', 'imu', 'lidar'] }
+            });
+        }
+        
+        function sendCustomMessage() {
+            const input = document.getElementById('customMessage');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            try {
+                const parsed = JSON.parse(message);
+                sendMessage(parsed);
+            } catch (e) {
+                sendMessage({
+                    type: 'custom',
+                    timestamp: new Date().toISOString(),
+                    data: message
+                });
+            }
+            input.value = '';
+        }
+        
+        function clearLog() {
+            document.getElementById('messageLog').innerHTML = '';
+        }
+        
+        // 页面加载完成后自动连接
+        window.onload = function() {
+            addToLog('🚀 页面加载完成，点击"连接"按钮开始测试');
+        };
+    </script>
+</body>
+</html>
+

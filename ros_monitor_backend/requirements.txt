@@ -1,0 +1,16 @@
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+websockets==12.0
+pydantic==2.7.1
+
+# ROS dependencies
+# rospy # 通过系统ROS安装，不用pip
+# cv_bridge # 通过系统ROS安装
+
+# Image processing
+opencv-python==4.8.1.78
+numpy==1.24.3
+
+# Additional utilities  
+python-multipart==0.0.6
+structlog==23.2.0
