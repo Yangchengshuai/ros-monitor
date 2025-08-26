@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket连接测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .log { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .connect { background-color: #28a745; color: white; }
+        .disconnect { background-color: #dc3545; color: white; }
+        .test { background-color: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket连接测试</h1>
+    
+    <div id="status" class="status disconnected">
+        状态: 未连接
+    </div>
+    
+    <div>
+        <button class="connect" onclick="connect()">连接</button>
+        <button class="disconnect" onclick="disconnect()">断开</button>
+        <button class="test" onclick="testAPI()">测试API</button>
+        <button class="test" onclick="testWebSocket()">测试WebSocket</button>
+    </div>
+    
+    <div class="log" id="log">
+        <strong>日志:</strong><br>
+        等待操作...
+    </div>
+
+    <script>
+        let ws = null;
+        let clientId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<br>[${timestamp}] ${message}`;
+            logDiv.scrollTop = logDiv.scrollTop + 1000;
+        }
+        
+        function updateStatus(connected, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${connected ? 'connected' : 'disconnected'}`;
+            statusDiv.innerHTML = `状态: ${message}`;
+        }
+        
+        function connect() {
+            try {
+                const wsUrl = `ws://localhost:8000/ws/${clientId}`;
+                log(`尝试连接到: ${wsUrl}`);
+                
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = function() {
+                    log('✅ WebSocket连接成功');
+                    updateStatus(true, '已连接');
+                    
+                    // 发送测试消息
+                    setTimeout(() => {
+                        sendMessage({
+                            type: 'ping',
+                            timestamp: new Date().toISOString()
+                        });
+                    }, 1000);
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const message = JSON.parse(event.data);
+                        log(`📨 收到消息: ${JSON.stringify(message, null, 2)}`);
+                    } catch (error) {
+                        log(`❌ 解析消息失败: ${error}`);
+                    }
+                };
+                
+                ws.onclose = function() {
+                    log('🔌 WebSocket连接关闭');
+                    updateStatus(false, '连接已关闭');
+                    ws = null;
+                };
+                
+                ws.onerror = function(error) {
+                    log(`❌ WebSocket错误: ${error}`);
+                    updateStatus(false, '连接错误');
+                };
+                
+            } catch (error) {
+                log(`❌ 创建WebSocket失败: ${error}`);
+                updateStatus(false, '创建连接失败');
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                log('🔌 主动断开连接');
+            }
+        }
+        
+        function sendMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+                log(`📤 发送消息: ${JSON.stringify(message)}`);
+            } else {
+                log('❌ WebSocket未连接，无法发送消息');
+            }
+        }
+        
+        function testAPI() {
+            log('🔍 测试后端API...');
+            
+            // 测试健康检查
+            fetch('http://localhost:8000/api/v1/health')
+                .then(response => response.json())
+                .then(data => {
+                    log(`✅ 健康检查API: ${JSON.stringify(data, null, 2)}`);
+                })
+                .catch(error => {
+                    log(`❌ 健康检查API失败: ${error}`);
+                });
+            
+            // 测试系统状态
+            fetch('http://localhost:8000/api/v1/system/status')
+                .then(response => response.json())
+                .then(data => {
+                    log(`✅ 系统状态API: ${JSON.stringify(data, null, 2)}`);
+                })
+                .catch(error => {
+                    log(`❌ 系统状态API失败: ${error}`);
+                });
+        }
+        
+        function testWebSocket() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('❌ WebSocket未连接，请先连接');
+                return;
+            }
+            
+            log('🔍 测试WebSocket消息...');
+            
+            // 发送订阅消息
+            sendMessage({
+                type: 'subscribe',
+                topics: ['camera']
+            });
+            
+            // 发送系统状态请求
+            sendMessage({
+                type: 'request_system_status'
+            });
+        }
+        
+        // 页面加载完成后自动测试API
+        window.onload = function() {
+            log('🚀 页面加载完成，开始测试...');
+            setTimeout(testAPI, 1000);
+        };
+    </script>
+</body>
+</html>

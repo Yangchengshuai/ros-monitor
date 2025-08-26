@@ -1,210 +1,177 @@
-# ROS Monitor - 多传感器监控系统
+# ROS监控系统 (ROS Monitor System)
 
-## 项目简介
+一个基于FastAPI和React的多传感器融合监控平台，专为IKing Handbot机器人项目设计，支持激光雷达、IMU、相机等传感器数据的实时监控和可视化。
 
-ROS Monitor 是一个基于 FastAPI 和 React 的多传感器监控平台，专为机器人系统设计，支持激光雷达、IMU、相机等传感器数据的实时监控和可视化。
+## 🚀 项目特性
 
-## 功能特性
+- **实时数据监控**: 支持ROS话题的实时订阅和数据流
+- **多传感器支持**: 激光雷达、IMU、相机等多种传感器
+- **WebSocket通信**: 实时数据推送和双向通信
+- **现代化前端**: 基于React + TypeScript + Ant Design
+- **RESTful API**: 完整的后端API接口
+- **系统监控**: 算法启停控制、录制控制、系统状态监控
 
-- 🚀 **实时监控**: 支持多种ROS话题的实时数据监控
-- 📊 **数据可视化**: 基于ECharts的数据图表展示
-- 📷 **相机监控**: 支持压缩图像和原始图像的实时显示
-- 🔌 **WebSocket通信**: 实时双向通信，低延迟数据推送
-- 🎯 **传感器管理**: 统一的传感器状态监控和控制面板
-- 📱 **响应式设计**: 支持桌面和移动设备的现代化UI
-
-## 系统架构
+## 🏗️ 系统架构
 
 ```
-ROS Monitor
-├── Frontend (React + TypeScript + Vite)
-│   ├── 实时数据展示
-│   ├── 传感器控制面板
-│   ├── 数据图表可视化
-│   └── 响应式Web界面
-├── Backend (FastAPI + Python)
-│   ├── ROS话题订阅
-│   ├── WebSocket服务
-│   ├── RESTful API
-│   └── 数据预处理
-└── ROS Bridge
-    ├── 传感器驱动
-    ├── 话题管理
-    └── 数据同步
+ROS Monitor System
+├── ros_monitor_backend/     # FastAPI后端服务
+│   ├── src/                # 核心源代码
+│   ├── tests/              # 测试文件
+│   ├── scripts/            # 启动和部署脚本
+│   └── requirements.txt    # Python依赖
+├── ros_monitor_frontend/   # React前端应用
+│   ├── src/                # 前端源代码
+│   ├── public/             # 静态资源
+│   └── package.json        # Node.js依赖
+├── script/                 # 系统级脚本
+├── Documents/              # 项目文档
+└── docs/                   # 技术文档
 ```
 
-## 技术栈
-
-### 前端
-- **React 19** - 现代化UI框架
-- **TypeScript** - 类型安全的JavaScript
-- **Vite** - 快速构建工具
-- **Ant Design** - 企业级UI组件库
-- **ECharts** - 数据可视化图表库
-- **Zustand** - 轻量级状态管理
+## 🛠️ 技术栈
 
 ### 后端
-- **FastAPI** - 高性能Python Web框架
-- **Uvicorn** - ASGI服务器
-- **WebSockets** - 实时通信
-- **OpenCV** - 图像处理
-- **NumPy** - 数值计算
+- **FastAPI**: 现代Python Web框架
+- **WebSocket**: 实时双向通信
+- **ROS集成**: rospy, cv_bridge等
+- **数据处理**: OpenCV, NumPy
 
-### 系统集成
-- **ROS (Robot Operating System)** - 机器人操作系统
-- **cv_bridge** - ROS图像转换
-- **rospy** - ROS Python客户端
+### 前端
+- **React 19**: 最新版本React框架
+- **TypeScript**: 类型安全的JavaScript
+- **Ant Design**: 企业级UI组件库
+- **ECharts**: 数据可视化图表
+- **Zustand**: 轻量级状态管理
 
-## 快速开始
+## 📦 快速开始
 
 ### 环境要求
-
 - Python 3.8+
 - Node.js 18+
 - ROS Noetic/Melodic
-- Ubuntu 18.04/20.04
+- Ubuntu 20.04+
 
-### 安装依赖
+### 1. 克隆项目
+```bash
+git clone <repository-url>
+cd ros-monitor-system
+```
 
-#### 后端依赖
+### 2. 启动后端服务
 ```bash
 cd ros_monitor_backend
+
+# 创建虚拟环境
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 安装依赖
 pip install -r requirements.txt
-```
 
-#### 前端依赖
-```bash
-cd ros_monitor_frontend
-npm install
-```
-
-### 启动系统
-
-#### 启动后端服务
-```bash
-cd ros_monitor_backend
+# 启动服务
 ./start_backend.sh
 ```
 
-#### 启动前端服务
+### 3. 启动前端应用
 ```bash
 cd ros_monitor_frontend
+
+# 安装依赖
+npm install
+
+# 开发模式
 npm run dev
+
+# 生产构建
+npm run build
 ```
 
-#### 一键启动所有服务
+### 4. 一键启动系统
 ```bash
+# 在项目根目录
 ./start_monitor_system.sh
 ```
 
-### 访问系统
+## 🔧 配置说明
 
-- 前端界面: http://localhost:5173
-- 后端API: http://localhost:8000
-- API文档: http://localhost:8000/docs
+### 后端配置
+- 默认端口: 8000
+- WebSocket端点: `/ws`
+- API文档: `/docs`
 
-## 配置说明
+### 前端配置
+- 开发端口: 5173
+- 构建输出: `dist/`目录
 
-### 传感器配置
+## 📊 功能模块
 
-在 `config/` 目录下配置各种传感器的参数：
+### 传感器监控
+- **激光雷达**: 点云数据实时显示
+- **IMU**: 姿态和运动数据监控
+- **相机**: 图像流和视频监控
 
-- 激光雷达配置
-- IMU参数设置
-- 相机参数配置
-- 话题名称映射
+### 系统控制
+- **算法启停**: 控制SLAM算法运行
+- **录制控制**: 数据录制管理
+- **状态监控**: 系统运行状态
 
-### 网络配置
+### 数据可视化
+- **实时图表**: ECharts图表展示
+- **3D可视化**: 点云和轨迹显示
+- **历史数据**: 数据回放和分析
 
-- WebSocket端口: 8001
-- HTTP API端口: 8000
-- 前端开发端口: 5173
+## 🧪 测试
 
-## 开发指南
-
-### 项目结构
-
-```
-ROS_monitor/
-├── ros_monitor_backend/          # 后端服务
-│   ├── src/                     # 源代码
-│   ├── tests/                   # 测试文件
-│   ├── requirements.txt         # Python依赖
-│   └── start_backend.sh        # 启动脚本
-├── ros_monitor_frontend/        # 前端应用
-│   ├── src/                     # React组件
-│   ├── public/                  # 静态资源
-│   ├── package.json            # Node.js依赖
-│   └── start_frontend.sh       # 启动脚本
-├── docs/                        # 项目文档
-├── scripts/                     # 系统脚本
-└── Documents/                   # 技术文档
-```
-
-### 添加新传感器
-
-1. 在 `ros_monitor_backend/src/ros_bridge/subscribers/` 下创建新的订阅器
-2. 在 `ros_monitor_frontend/src/components/Sensors/` 下添加对应的UI组件
-3. 更新WebSocket消息类型和API接口
-
-### 测试
-
+### 后端测试
 ```bash
-# 后端测试
 cd ros_monitor_backend
 python -m pytest tests/
-
-# 前端测试
-cd ros_monitor_frontend
-npm run test
 ```
 
-## 部署
-
-### Docker部署
-
+### 前端测试
 ```bash
-# 构建镜像
-docker build -t ros-monitor .
-
-# 运行容器
-docker run -p 8000:8000 -p 5173:5173 ros-monitor
+cd ros_monitor_frontend
+npm run lint
+npm test
 ```
 
-### 生产环境
+### 端到端测试
+```bash
+python test_end_to_end.py
+```
 
-- 使用Nginx作为反向代理
-- 配置SSL证书
-- 设置环境变量
-- 监控和日志管理
+## 📚 文档
 
-## 贡献指南
+- [快速启动指南](ros_monitor_backend/README_QuickStart.md)
+- [测试指南](ros_monitor_backend/README_TESTING.md)
+- [相机调试指南](ros_monitor_backend/README_CAMERA_DEBUG.md)
+- [API文档](http://localhost:8000/docs)
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+## 🤝 贡献指南
+
+1. Fork项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+5. 创建Pull Request
 
-## 许可证
+## 📄 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+本项目采用MIT许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
-## 联系方式
+## 🙏 致谢
 
-- 项目维护者: Yangchengshuai
-- GitHub: [@Yangchengshuai](https://github.com/Yangchengshuai)
-- 项目地址: [ros-monitor](https://github.com/Yangchengshuai/ros-monitor)
+- IKing Handbot项目团队
+- ROS社区
+- FastAPI和React开源社区
 
-## 更新日志
+## 📞 联系方式
 
-### v1.0.0 (2025-08-26)
-- 🎉 初始版本发布
-- ✨ 支持激光雷达、IMU、相机监控
-- 🚀 实时WebSocket通信
-- 📊 数据可视化图表
-- 🎨 现代化React UI界面
+- 项目维护者: YCS
+- 项目地址: [GitHub Repository]
+- 问题反馈: [Issues]
 
 ---
 
-⭐ 如果这个项目对您有帮助，请给我们一个星标！
+**注意**: 本项目需要ROS环境支持，请确保已正确安装和配置ROS系统。

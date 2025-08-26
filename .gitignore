@@ -21,7 +21,7 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual Environment
+# Virtual environments
 .env
 .venv
 env/
@@ -66,18 +66,11 @@ Thumbs.db
 # Logs
 *.log
 logs/
-Log/
-
-# Debug images
-debug_images/
-*.jpg
-*.png
-*.jpeg
 
 # Temporary files
 *.tmp
 *.temp
-.cache/
+*.bak
 
 # Environment variables
 .env.local
@@ -130,3 +123,28 @@ celerybeat.pid
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ROS specific
+*.bag
+*.bag.active
+*.bag.bak
+*.bag.info
+*.bag.orig
+
+# Camera debug images
+debug_images/
+test_image_*.jpg
+
+# Backend logs
+backend.log
+
+# Frontend build artifacts
+ros_monitor_frontend/dist/
+ros_monitor_frontend/build/
+
+# System files
+.claude/
+*.png
