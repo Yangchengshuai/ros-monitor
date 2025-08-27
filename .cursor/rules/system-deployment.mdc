@@ -1,0 +1,29 @@
+# 系统启动和部署规则
+
+## 主要启动脚本
+- 完整系统启动: [start_monitor_system.sh](mdc:start_monitor_system.sh)
+- 系统停止: [script/stop_all.sh](mdc:script/stop_all.sh)
+
+## 组件启动脚本
+- 后端启动: [ros_monitor_backend/start_backend.sh](mdc:ros_monitor_backend/start_backend.sh)
+- 前端启动: [ros_monitor_frontend/start_frontend.sh](mdc:ros_monitor_frontend/start_frontend.sh)
+- 脚本目录: [script/start_all.sh](mdc:script/start_all.sh)
+
+## 端口管理
+- 端口检查: [check_ports.sh](mdc:check_ports.sh)
+- 端口清理: [force_cleanup_ports.sh](mdc:force_cleanup_ports.sh)
+
+## 开发脚本
+- 后端测试: [ros_monitor_backend/run_backend_test.sh](mdc:ros_monitor_backend/run_backend_test.sh)
+- 相机测试: [ros_monitor_backend/run_camera_test.sh](mdc:ros_monitor_backend/run_camera_test.sh)
+- 系统调试: [ros_monitor_backend/run_system_debug.sh](mdc:ros_monitor_backend/run_system_debug.sh)
+
+## 部署规范
+- 使用bash脚本进行系统管理
+- 提供端口检查和清理功能
+- 支持独立组件启动和停止
+- 包含错误处理和状态检查
+description:
+globs:
+alwaysApply: true
+---

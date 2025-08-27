@@ -31,15 +31,23 @@ else
 fi
 
 # 检查端口占用
-if lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null ; then
-    echo "⚠️  端口5173已被占用，正在停止..."
-    pkill -f "vite.*5173" || true
+PORT=${VITE_PORT:-5173}
+if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null ; then
+    echo "⚠️  端口$PORT已被占用，正在停止..."
+    pkill -f "vite.*$PORT" || true
     sleep 2
 fi
 
 # 启动前端服务
 echo "🚀 启动ROS监控前端服务..."
-echo "   访问地址: http://localhost:5173"
+echo "   访问地址: http://localhost:$PORT"
 echo "   按 Ctrl+C 停止服务"
+
+# 设置环境变量
+export VITE_PORT=$PORT
+if [ -n "$VITE_BACKEND_URL" ]; then
+    export VITE_BACKEND_URL
+    echo "   后端地址: $VITE_BACKEND_URL"
+fi
 
 npm run dev

@@ -17,7 +17,7 @@
 **以便于** 远程启动数据采集作业而无需物理访问设备
 
 **验收标准**:
-- [ ] 点击"开始采集"按钮后，系统执行 `/home/ycs/work/ikinghandbot/scripts/start_all.sh`
+- [ ] 点击"开始采集"按钮后，系统执行 `script/start_all.sh`
 - [ ] 执行成功后在界面显示"采集中"状态
 - [ ] 执行失败显示错误信息和重试选项
 - [ ] 支持局域网内任意设备访问和控制
@@ -28,7 +28,7 @@
 **以便于** 远程结束数据采集作业
 
 **验收标准**:
-- [ ] 点击"停止采集"按钮后，系统执行 `/home/ycs/work/ikinghandbot/scripts/stop_all.sh`
+- [ ] 点击"停止采集"按钮后，系统执行 `script/stop_all.sh`
 - [ ] 执行成功后在界面显示"已停止"状态
 - [ ] 支持强制停止功能（处理异常进程）
 
@@ -199,7 +199,7 @@ Response:
   "data": {
     "process_id": 1234,
     "start_time": "2024-01-01T12:00:00Z",
-    "script_path": "/home/ycs/work/ikinghandbot/scripts/start_all.sh"
+    "script_path": "script/start_all.sh"
   }
 }
 ```
@@ -236,7 +236,7 @@ Response:
     "process_id": 1234,
     "start_time": "2024-01-01T12:00:00Z",
     "duration": 1800,
-    "script_path": "/home/ycs/work/ikinghandbot/scripts/start_all.sh",
+    "script_path": "script/start_all.sh",
     "last_update": "2024-01-01T12:30:15Z"
   }
 }

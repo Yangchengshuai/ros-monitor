@@ -7,7 +7,7 @@ import {
   CameraOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { wsService } from '../services/websocket';
 
 interface CameraData {
   camera_id: string;
@@ -41,35 +41,47 @@ export const CameraViewer: React.FC<CameraViewerProps> = ({
   const [lastUpdateTime, setLastUpdateTime] = useState<number>(0);
   const [frameCount, setFrameCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
-  
-  const { connected, sendMessage } = useWebSocket();
+  // 使用全局单例的wsService
   
   // 相机标题和状态
   const cameraTitle = cameraId === 'left_camera' ? '左相机' : '右相机';
-  const connectionStatus = cameraData ? 'connected' : 'disconnected';
+  
+  // 获取WebSocket连接状态
+  const wsConnectedState = wsService.isConnected();
+  
+  // 连接状态：基于WebSocket连接状态，而不是相机数据
+  const connectionStatus = wsConnectedState ? 'connected' : 'disconnected';
+  
+
   
   // 处理WebSocket消息
   useEffect(() => {
-    if (!connected) return;
+    if (!wsConnectedState) {
+      console.log(`CameraViewer ${cameraId}: WebSocket未连接，跳过消息处理`);
+      return;
+    }
+    
+    console.log(`CameraViewer ${cameraId}: 开始处理WebSocket消息`);
     
     // 订阅相机数据
-    sendMessage({
-      type: 'subscribe',
-      topics: ['camera']
-    });
+    wsService.subscribe(['camera']);
     
     // 设置消息处理函数
     const handleWebSocketMessage = (message: any) => {
       try {
-        if (message.type === 'camera' && message.camera_id === cameraId) {
-          console.log(`收到相机数据: ${cameraId}`, message);
+        console.log(`CameraViewer ${cameraId}: 收到消息:`, message);
+        
+        if (message.type === 'camera' && message.data?.camera_id === cameraId) {
+          console.log(`CameraViewer ${cameraId}: 收到匹配的相机数据:`, message);
           setCameraData(message.data);
           setLastUpdateTime(Date.now());
           setFrameCount(prev => prev + 1);
           setErrorCount(0);
+        } else {
+          console.log(`CameraViewer ${cameraId}: 消息不匹配 - type: ${message.type}, camera_id: ${message.data?.camera_id}, 期望: ${cameraId}`);
         }
       } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+        console.error(`CameraViewer ${cameraId}: 处理消息失败:`, error);
         setErrorCount(prev => prev + 1);
       }
     };
@@ -84,28 +96,22 @@ export const CameraViewer: React.FC<CameraViewerProps> = ({
     return () => {
       window.removeEventListener('websocket-message', messageHandler as EventListener);
     };
-  }, [connected, cameraId, sendMessage]);
+  }, [wsConnectedState, cameraId, wsService]);
   
   // 订阅/取消订阅相机数据
   useEffect(() => {
-    if (!connected) return;
+    if (!wsConnectedState) return;
     
     if (isStreaming) {
       // 订阅相机数据
-      sendMessage({
-        type: 'subscribe',
-        topics: ['camera']
-      });
+      wsService.subscribe(['camera']);
       message.success(`${cameraTitle} 数据流已开启`);
     } else {
       // 取消订阅
-      sendMessage({
-        type: 'unsubscribe',
-        topics: ['camera']
-      });
+      wsService.unsubscribe(['camera']);
       message.info(`${cameraTitle} 数据流已停止`);
     }
-  }, [isStreaming, connected, sendMessage, cameraTitle]);
+  }, [isStreaming, wsConnectedState, wsService, cameraTitle]);
   
   // 绘制图像到Canvas
   useEffect(() => {
@@ -180,13 +186,15 @@ export const CameraViewer: React.FC<CameraViewerProps> = ({
   }, [cameraId]);
   
   const handleRefresh = useCallback(() => {
-    if (connected) {
-      sendMessage({
-        type: 'request_system_status'
+    if (wsConnectedState) {
+      wsService.send({
+        type: 'request_system_status',
+        timestamp: new Date().toISOString(),
+        data: {}
       });
       message.info('正在刷新系统状态...');
     }
-  }, [connected, sendMessage]);
+  }, [wsConnectedState, wsService]);
   
   // 计算状态信息
   const statusColor = connectionStatus === 'connected' ? 'success' : 'error';
@@ -220,7 +228,7 @@ export const CameraViewer: React.FC<CameraViewerProps> = ({
             onChange={handleStreamToggle}
             checkedChildren="ON"
             unCheckedChildren="OFF"
-            disabled={!connected}
+            disabled={!wsConnectedState}
           />
           <Button 
             icon={<SettingOutlined />}
@@ -305,7 +313,7 @@ export const CameraViewer: React.FC<CameraViewerProps> = ({
         )}
         
         {/* 连接状态提示 */}
-        {!connected && (
+        {!wsConnectedState && (
           <div 
             style={{
               position: 'absolute',

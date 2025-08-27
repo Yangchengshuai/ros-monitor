@@ -128,21 +128,36 @@ async def handle_websocket_message(client_id: str, message: dict):
         msg_type = message.get("type")
         
         if msg_type == "subscribe":
-            topics = message.get("topics", [])
+            # 修复：从data字段中获取topics
+            topics = message.get("data", {}).get("topics", [])
             await connection_manager.subscribe_topics(client_id, topics)
             logger.info(f"Client {client_id} subscribed to topics: {topics}")
             
-            # 发送订阅确认
+            # 发送订阅确认 - 修复格式，添加data字段
             await connection_manager.send_personal_message({
                 "type": "subscription_confirmed",
-                "topics": topics,
-                "message": f"已成功订阅话题: {', '.join(topics)}"
+                "data": {
+                    "topics": topics,
+                    "message": f"已成功订阅话题: {', '.join(topics)}"
+                },
+                "timestamp": time.time()
             }, client_id)
             
         elif msg_type == "unsubscribe":
-            topics = message.get("topics", [])
+            # 修复：从data字段中获取topics
+            topics = message.get("data", {}).get("topics", [])
             await connection_manager.unsubscribe_topics(client_id, topics)
             logger.info(f"Client {client_id} unsubscribed from topics: {topics}")
+            
+            # 发送取消订阅确认
+            await connection_manager.send_personal_message({
+                "type": "unsubscribed",
+                "data": {
+                    "topics": topics,
+                    "message": f"已取消订阅话题: {', '.join(topics)}"
+                },
+                "timestamp": time.time()
+            }, client_id)
             
         elif msg_type == "request_system_status":
             # 发送系统状态
@@ -150,19 +165,23 @@ async def handle_websocket_message(client_id: str, message: dict):
                 connection_info = ros_manager.get_connection_info()
                 system_status = {
                     "type": "system_status",
-                    "ros_ready": ros_manager.is_connected(),
-                    "websocket_status": "connected",
-                    "api_status": True,
-                    "ros_info": connection_info,
+                    "data": {
+                        "ros_ready": ros_manager.is_connected(),
+                        "websocket_status": "connected",
+                        "api_status": True,
+                        "ros_info": connection_info
+                    },
                     "timestamp": time.time()
                 }
             else:
                 system_status = {
                     "type": "system_status",
-                    "ros_ready": False,
-                    "websocket_status": "connected",
-                    "api_status": True,
-                    "ros_info": None,
+                    "data": {
+                        "ros_ready": False,
+                        "websocket_status": "connected",
+                        "api_status": True,
+                        "ros_info": None
+                    },
                     "timestamp": time.time()
                 }
             
@@ -172,6 +191,9 @@ async def handle_websocket_message(client_id: str, message: dict):
             # 响应ping消息
             await connection_manager.send_personal_message({
                 "type": "pong",
+                "data": {
+                    "message": "pong"
+                },
                 "timestamp": time.time()
             }, client_id)
             
@@ -186,35 +208,51 @@ async def handle_websocket_message(client_id: str, message: dict):
                     success = ros_manager.update_camera_settings(camera_id, preview_height, jpeg_quality)
                     await connection_manager.send_personal_message({
                         "type": "camera_settings_updated",
-                        "camera_id": camera_id,
-                        "success": success,
-                        "message": "相机设置已更新" if success else "相机设置更新失败"
+                        "data": {
+                            "camera_id": camera_id,
+                            "success": success,
+                            "message": "相机设置已更新" if success else "相机设置更新失败"
+                        },
+                        "timestamp": time.time()
                     }, client_id)
             else:
                 await connection_manager.send_personal_message({
                     "type": "error",
-                    "message": "ROS管理器未初始化"
+                    "data": {
+                        "message": "ROS管理器未初始化"
+                    },
+                    "timestamp": time.time()
                 }, client_id)
                 
         else:
             logger.warning(f"Unknown message type from {client_id}: {msg_type}")
             await connection_manager.send_personal_message({
                 "type": "error",
-                "message": f"未知的消息类型: {msg_type}"
+                "data": {
+                    "message": f"未知的消息类型: {msg_type}"
+                },
+                "timestamp": time.time()
             }, client_id)
             
     except Exception as e:
         logger.error(f"Error handling WebSocket message from {client_id}: {e}")
         await connection_manager.send_personal_message({
             "type": "error",
-            "message": f"消息处理错误: {str(e)}"
+            "data": {
+                "message": f"消息处理错误: {str(e)}"
+            },
+            "timestamp": time.time()
         }, client_id)
 
 async def background_broadcast():
     """后台数据广播任务"""
+    logger.info("🚀 后台数据广播任务已启动")
+    
     while True:
         try:
             if ros_manager and ros_manager.is_connected():
+                logger.debug("ROS管理器已连接，开始获取传感器数据...")
+                
                 # 获取最新的传感器数据
                 camera_data = await ros_manager.get_latest_camera_data()
                 lidar_data = await ros_manager.get_latest_lidar_data()
@@ -222,18 +260,21 @@ async def background_broadcast():
                 
                 # 推送给订阅的客户端
                 if camera_data:
-                    logger.info(f"广播相机数据: {list(camera_data.keys())}")
+                    logger.info(f"📷 广播相机数据: {list(camera_data.keys())}")
                     for camera_id, data in camera_data.items():
                         message = {
                             "type": "camera",
-                            "camera_id": camera_id,
-                            "data": data,
+                            "data": {
+                                "camera_id": camera_id,
+                                **data  # 展开相机数据的所有字段
+                            },
                             "timestamp": time.time()
                         }
+                        logger.info(f"📤 发送相机 {camera_id} 数据，帧数: {data.get('sequence', 0)}")
                         await connection_manager.broadcast_to_subscribers("camera", message)
-                        logger.info(f"相机 {camera_id} 数据已广播，帧数: {data.get('sequence', 0)}")
+                        logger.info(f"✅ 相机 {camera_id} 数据已广播，帧数: {data.get('sequence', 0)}")
                 else:
-                    logger.debug("没有相机数据可广播")
+                    logger.warning("⚠️ 没有相机数据可广播 - 检查ROS话题是否有数据")
                 
                 if lidar_data:
                     message = {
@@ -242,6 +283,7 @@ async def background_broadcast():
                         "timestamp": time.time()
                     }
                     await connection_manager.broadcast_to_subscribers("lidar", message)
+                    logger.debug("📡 激光雷达数据已广播")
                     
                 if imu_data:
                     message = {
@@ -250,9 +292,15 @@ async def background_broadcast():
                         "timestamp": time.time()
                     }
                     await connection_manager.broadcast_to_subscribers("imu", message)
+                    logger.debug("📊 IMU数据已广播")
                     
+            else:
+                logger.warning("⚠️ ROS管理器未连接或未初始化")
+                
         except Exception as e:
-            logger.error(f"Background broadcast error: {e}")
+            logger.error(f"❌ 后台广播错误: {e}")
+            import traceback
+            logger.error(f"错误详情: {traceback.format_exc()}")
         
         await asyncio.sleep(0.1)  # 10Hz推送频率
 
@@ -261,10 +309,20 @@ from src.api.v1.data_collection import router as data_collection_router
 app.include_router(data_collection_router, prefix="/api/v1")
 
 if __name__ == "__main__":
+    import os
+    
+    # 从环境变量获取配置
+    host = os.getenv("ROS_MONITOR_HOST", "0.0.0.0")
+    port = int(os.getenv("ROS_MONITOR_BACKEND_PORT", "8000"))
+    
+    print(f"🚀 启动ROS监控后端服务...")
+    print(f"   主机: {host}")
+    print(f"   端口: {port}")
+    
     uvicorn.run(
         "src.main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=host,
+        port=port,
         reload=False,
         log_level="info"
     )

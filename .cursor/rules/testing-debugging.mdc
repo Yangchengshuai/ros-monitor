@@ -1,0 +1,31 @@
+# 测试和调试规则
+
+## 测试文件组织
+- 后端测试: [ros_monitor_backend/tests/](mdc:ros_monitor_backend/tests/)
+- 独立测试: [ros_monitor_backend/test_*.py](mdc:ros_monitor_backend/test_*.py)
+- 前端测试: [ros_monitor_frontend/test_*.html](mdc:ros_monitor_frontend/test_*.html)
+
+## 核心测试
+- 数据收集测试: [ros_monitor_backend/test_data_collection_backend.py](mdc:ros_monitor_backend/test_data_collection_backend.py)
+- 相机测试: [ros_monitor_backend/test_camera_simple.py](mdc:ros_monitor_backend/test_camera_simple.py)
+- WebSocket测试: [ros_monitor_backend/test_websocket_integration.py](mdc:ros_monitor_backend/test_websocket_integration.py)
+- 系统测试: [ros_monitor_backend/test_system.py](mdc:ros_monitor_backend/test_system.py)
+
+## 调试工具
+- 相机系统调试: [ros_monitor_backend/debug_camera_system.py](mdc:ros_monitor_backend/debug_camera_system.py)
+- 相机话题调试: [ros_monitor_backend/debug_camera_topics.py](mdc:ros_monitor_backend/debug_camera_topics.py)
+
+## 测试脚本
+- 后端测试: [ros_monitor_backend/run_backend_test.sh](mdc:ros_monitor_backend/run_backend_test.sh)
+- 相机测试: [ros_monitor_backend/run_camera_test.sh](mdc:ros_monitor_backend/run_camera_test.sh)
+- 系统调试: [ros_monitor_backend/run_system_debug.sh](mdc:ros_monitor_backend/run_system_debug.sh)
+
+## 测试规范
+- 使用描述性的测试文件名
+- 包含单元测试和集成测试
+- 提供独立的调试工具
+- 支持端到端测试验证
+description:
+globs:
+alwaysApply: true
+---

@@ -81,7 +81,7 @@ class CameraSubscriber:
                         'width': cv_image.shape[1],
                         'height': cv_image.shape[0],
                         'data': encoded_image,
-                        'compressed': True,
+                        'compressed': False,
                         'compressed_size': compressed_size,
                         'compression_ratio': len(msg.data) / compressed_size if compressed_size > 0 else 1.0,
                         'frame_rate': 1.0 / (current_time - self.last_frame_time) if self.last_frame_time > 0 else 0.0

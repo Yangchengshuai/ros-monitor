@@ -58,7 +58,7 @@ async def start_data_collection(request: StartRequest):
             _status_cache.update({
                 "is_running": True,
                 "start_time": time.time(),
-                "script_path": f"/home/ycs/work/ikinghandbot/scripts/{request.script}",
+                "script_path": f"script/{request.script}",
                 "last_update": time.time()
             })
             

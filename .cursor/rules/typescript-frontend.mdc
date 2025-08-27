@@ -1,0 +1,41 @@
+# TypeScript/React前端开发规则
+
+## 技术栈
+- React 18+ with TypeScript
+- Vite作为构建工具
+- Zustand状态管理
+- WebSocket实时通信
+
+## 项目结构
+- 主入口: [ros_monitor_frontend/src/main.tsx](mdc:ros_monitor_frontend/src/main.tsx)
+- 应用组件: [ros_monitor_frontend/src/App.tsx](mdc:ros_monitor_frontend/src/App.tsx)
+- 组件目录: [ros_monitor_frontend/src/components/](mdc:ros_monitor_frontend/src/components/)
+
+## 组件组织
+- 布局组件: [ros_monitor_frontend/src/components/Layout/](mdc:ros_monitor_frontend/src/components/Layout/)
+- 传感器组件: [ros_monitor_frontend/src/components/Sensors/](mdc:ros_monitor_frontend/src/components/Sensors/)
+- 仪表板组件: [ros_monitor_frontend/src/components/Dashboard/](mdc:ros_monitor_frontend/src/components/Dashboard/)
+
+## 状态管理
+- 传感器状态: [ros_monitor_frontend/src/stores/useSensorStore.ts](mdc:ros_monitor_frontend/src/stores/useSensorStore.ts)
+- 系统状态: [ros_monitor_frontend/src/stores/useSystemStore.ts](mdc:ros_monitor_frontend/src/stores/useSystemStore.ts)
+
+## 服务层
+- API服务: [ros_monitor_frontend/src/services/api.ts](mdc:ros_monitor_frontend/src/services/api.ts)
+- WebSocket服务: [ros_monitor_frontend/src/services/websocket.ts](mdc:ros_monitor_frontend/src/services/websocket.ts)
+- 数据收集服务: [ros_monitor_frontend/src/services/dataCollection.ts](mdc:ros_monitor_frontend/src/services/dataCollection.ts)
+
+## 类型定义
+- API类型: [ros_monitor_frontend/src/types/api.ts](mdc:ros_monitor_frontend/src/types/api.ts)
+- 传感器类型: [ros_monitor_frontend/src/types/sensors.ts](mdc:ros_monitor_frontend/src/types/sensors.ts)
+- WebSocket类型: [ros_monitor_frontend/src/types/websocket.ts](mdc:ros_monitor_frontend/src/types/websocket.ts)
+
+## 开发规范
+- 使用函数组件和Hooks
+- 严格TypeScript类型检查
+- 组件使用PascalCase命名
+- 文件使用kebab-case命名
+description:
+globs:
+alwaysApply: true
+---

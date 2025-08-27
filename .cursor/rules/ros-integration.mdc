@@ -1,0 +1,34 @@
+# ROS集成开发规则
+
+## ROS桥接架构
+- 节点管理器: [ros_monitor_backend/src/ros_bridge/node_manager.py](mdc:ros_monitor_backend/src/ros_bridge/node_manager.py)
+- 订阅者模块: [ros_monitor_backend/src/ros_bridge/subscribers/](mdc:ros_monitor_backend/src/ros_bridge/subscribers/)
+
+## 传感器订阅者
+- 相机订阅者: [ros_monitor_backend/src/ros_bridge/subscribers/camera_subscriber.py](mdc:ros_monitor_backend/src/ros_bridge/subscribers/camera_subscriber.py)
+- 压缩相机订阅者: [ros_monitor_backend/src/ros_bridge/subscribers/compressed_camera_subscriber.py](mdc:ros_monitor_backend/src/ros_bridge/subscribers/compressed_camera_subscriber.py)
+- IMU订阅者: [ros_monitor_backend/src/ros_bridge/subscribers/imu_subscriber.py](mdc:ros_monitor_backend/src/ros_bridge/subscribers/imu_subscriber.py)
+- 激光雷达订阅者: [ros_monitor_backend/src/ros_bridge/subscribers/lidar_subscriber.py](mdc:ros_monitor_backend/src/ros_bridge/subscribers/lidar_subscriber.py)
+
+## 测试和调试
+- 相机测试: [ros_monitor_backend/test_camera_simple.py](mdc:ros_monitor_backend/test_camera_simple.py)
+- 压缩相机测试: [ros_monitor_backend/test_compressed_camera.py](mdc:ros_monitor_backend/test_compressed_camera.py)
+- 系统调试: [ros_monitor_backend/run_system_debug.sh](mdc:ros_monitor_backend/run_system_debug.sh)
+
+## 环境配置
+- ROS环境修复: [ros_monitor_backend/fix_ros_env.sh](mdc:ros_monitor_backend/fix_ros_env.sh)
+- 环境检查: [ros_monitor_backend/check_environment.py](mdc:ros_monitor_backend/check_environment.py)
+
+## 端口管理
+- 端口检查: [check_ports.sh](mdc:check_ports.sh)
+- 强制清理: [force_cleanup_ports.sh](mdc:force_cleanup_ports.sh)
+
+## 开发规范
+- 使用ROS2 Python客户端库
+- 实现适当的错误处理和重连机制
+- 支持多种传感器数据类型
+- 提供实时数据流和状态监控
+description:
+globs:
+alwaysApply: true
+---

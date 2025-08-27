@@ -47,9 +47,9 @@ else
 fi
 
 # 检查IKing Handbot工作空间
-if [ -f "/home/ycs/work/ikinghandbot/devel/setup.bash" ]; then
+if [ -f "/home/iking/work/ikinghandbot/devel/setup.bash" ]; then
     echo "🏠 加载IKing Handbot工作空间..."
-    source /home/ycs/work/ikinghandbot/devel/setup.bash
+    source /home/iking/work/ikinghandbot/devel/setup.bash
     echo "✅ 工作空间已加载"
 else
     echo "⚠️  IKing Handbot工作空间未找到，跳过..."
@@ -66,16 +66,21 @@ echo "  - ROS_HOSTNAME: $ROS_HOSTNAME"
 echo "  - PYTHONPATH: $PYTHONPATH"
 
 # 检查端口占用
-if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
-    echo "⚠️  端口8000已被占用，正在停止..."
-    pkill -f "uvicorn.*8000" || true
+PORT=${ROS_MONITOR_BACKEND_PORT:-8000}
+if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null ; then
+    echo "⚠️  端口$PORT已被占用，正在停止..."
+    pkill -f "uvicorn.*$PORT" || true
     sleep 2
 fi
 
 # 启动后端服务
 echo "🚀 启动ROS监控后端服务..."
-echo "   访问地址: http://localhost:8000"
-echo "   API文档: http://localhost:8000/docs"
+echo "   访问地址: http://localhost:$PORT"
+echo "   API文档: http://localhost:$PORT/docs"
 echo "   按 Ctrl+C 停止服务"
+
+# 设置环境变量
+export ROS_MONITOR_BACKEND_PORT=$PORT
+export ROS_MONITOR_HOST=${ROS_MONITOR_HOST:-"0.0.0.0"}
 
 python -m src.main

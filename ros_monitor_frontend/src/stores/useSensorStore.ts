@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type { CameraData, LidarData, SensorStatus } from '../types/sensors';
 
-
 interface SensorStore {
   // 相机数据
   camera: {

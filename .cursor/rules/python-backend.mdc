@@ -1,0 +1,29 @@
+# Python后端开发规则
+
+## 代码风格
+- 使用Python 3.8+语法
+- 遵循PEP 8代码风格
+- 使用类型注解（Type hints）
+- 导入顺序：标准库 → 第三方库 → 本地模块
+
+## 项目结构
+- 主应用入口: [ros_monitor_backend/src/main.py](mdc:ros_monitor_backend/src/main.py)
+- API版本控制: [ros_monitor_backend/src/api/v1/](mdc:ros_monitor_backend/src/api/v1/)
+- ROS桥接模块: [ros_monitor_backend/src/ros_bridge/](mdc:ros_monitor_backend/src/ros_bridge/)
+
+## 依赖管理
+- 使用 [ros_monitor_backend/requirements.txt](mdc:ros_monitor_backend/requirements.txt) 管理依赖
+- 主要依赖：FastAPI, ROS2, WebSocket
+
+## 测试
+- 测试文件位于 [ros_monitor_backend/tests/](mdc:ros_monitor_backend/tests/)
+- 使用 `test_*.py` 命名约定
+- 运行测试: [ros_monitor_backend/run_backend_test.sh](mdc:ros_monitor_backend/run_backend_test.sh)
+
+## 调试工具
+- 相机调试: [ros_monitor_backend/debug_camera_system.py](mdc:ros_monitor_backend/debug_camera_system.py)
+- 系统调试: [ros_monitor_backend/run_system_debug.sh](mdc:ros_monitor_backend/run_system_debug.sh)
+description:
+globs:
+alwaysApply: true
+---

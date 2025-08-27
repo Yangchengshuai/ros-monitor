@@ -27,9 +27,9 @@ else
 fi
 
 # 设置项目ROS环境
-if [ -f "/home/ycs/work/ikinghandbot/devel/setup.bash" ]; then
+if [ -f "/home/iking/work/ikinghandbot/devel/setup.bash" ]; then
   echo "加载项目ROS环境..."
-  source /home/ycs/work/ikinghandbot/devel/setup.bash
+  source /home/iking/work/ikinghandbot/devel/setup.bash
 fi
 
 # 检查ROS Master

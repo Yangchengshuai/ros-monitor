@@ -57,7 +57,7 @@ fi
 > /tmp/livo_pids.txt
 
 # 获取工作空间路径
-WORKSPACE_PATH="/home/ycs/work/ikinghandbot"
+WORKSPACE_PATH="/home/iking/work/ikinghandbot"
 DEVEL_PATH="$WORKSPACE_PATH/devel/setup.bash"
 
 # 检查环境是否正确
@@ -107,7 +107,7 @@ sleep 3
 # 4. 启动rosbag录制节点
 echo "启动rosbag录制节点..."
 # 创建data目录（如果不存在）
-DATA_DIR="/home/ycs/work/data"
+DATA_DIR="/home/iking/work/data"
 mkdir -p $DATA_DIR
 
 gnome-terminal --title="RosBag Record" -- bash -c "

@@ -32,7 +32,7 @@ echo ""
 
 # 检查工作目录
 if [ ! -f "ros_monitor_backend/start_backend.sh" ]; then
-    echo "❌ 请在IKing Handbot根目录运行此脚本"
+    echo "❌ 请在ros-monitor项目根目录运行此脚本"
     exit 1
 fi
 
@@ -74,16 +74,41 @@ fi
 # 检查ROS Master
 echo "🔍 检查ROS Master状态..."
 if ! rostopic list > /dev/null 2>&1; then
-    echo "⚠️  ROS Master未运行，尝试启动..."
-    echo "   请在新终端运行: roscore"
-    echo "   或者启动您的ROS系统"
-    echo ""
-    read -p "ROS Master是否已启动？(y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "请先启动ROS Master，然后重新运行此脚本"
+    echo "⚠️  ROS Master未运行，正在启动roscore..."
+    
+    # 启动roscore（后台运行）
+    echo "🚀 启动roscore..."
+    roscore > /tmp/roscore.log 2>&1 &
+    ROSCORE_PID=$!
+    
+    # 等待roscore启动
+    echo "⏳ 等待roscore启动..."
+    local count=0
+    local max_wait=30
+    
+    while [ $count -lt $max_wait ]; do
+        if rostopic list > /dev/null 2>&1; then
+            echo "✅ roscore启动成功 (PID: $ROSCORE_PID)"
+            echo "   日志文件: /tmp/roscore.log"
+            break
+        fi
+        
+        echo "   等待中... ($count/$max_wait)"
+        sleep 1
+        count=$((count + 1))
+    done
+    
+    if [ $count -eq $max_wait ]; then
+        echo "❌ roscore启动超时"
+        echo "检查日志: tail -f /tmp/roscore.log"
+        kill $ROSCORE_PID 2>/dev/null || true
         exit 1
     fi
+    
+    # 保存roscore PID到文件，方便后续停止
+    echo $ROSCORE_PID > /tmp/roscore.pid
+    echo "💾 roscore PID已保存到 /tmp/roscore.pid"
+    
 else
     echo "✅ ROS Master运行正常"
 fi
@@ -498,6 +523,47 @@ read
 echo "🛑 停止监控系统..."
 kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
 
+# 停止roscore（如果是由脚本启动的）
+if [ -f "/tmp/roscore.pid" ]; then
+    ROSCORE_PID=$(cat /tmp/roscore.pid)
+    if [ -n "$ROSCORE_PID" ] && kill -0 $ROSCORE_PID 2>/dev/null; then
+        echo "🛑 停止roscore (PID: $ROSCORE_PID)..."
+        
+        # 先尝试优雅停止
+        kill $ROSCORE_PID 2>/dev/null || true
+        sleep 3
+        
+        # 如果还在运行，强制停止
+        if kill -0 $ROSCORE_PID 2>/dev/null; then
+            echo "强制停止roscore..."
+            kill -9 $ROSCORE_PID 2>/dev/null || true
+            sleep 1
+        fi
+        
+        # 再次检查是否真的停止了
+        if kill -0 $ROSCORE_PID 2>/dev/null; then
+            echo "⚠️  roscore进程仍在运行，尝试其他方法..."
+            # 使用pkill强制停止所有roscore相关进程
+            pkill -f "roscore" 2>/dev/null || true
+            pkill -f "rosmaster" 2>/dev/null || true
+            sleep 2
+        fi
+        
+        echo "✅ roscore已停止"
+    fi
+    
+    # 清理roscore相关文件
+    rm -f /tmp/roscore.pid /tmp/roscore.log
+    echo "🧹 roscore相关文件已清理"
+fi
+
+# 额外清理：确保所有ROS相关进程都被停止
+echo "🧹 清理所有ROS相关进程..."
+pkill -f "roscore" 2>/dev/null || true
+pkill -f "rosmaster" 2>/dev/null || true
+pkill -f "rosout" 2>/dev/null || true
+sleep 1
+
 # 等待进程完全停止
 sleep 2
 
@@ -505,12 +571,21 @@ sleep 2
 if [ -n "$BACKEND_PID" ] && kill -0 $BACKEND_PID 2>/dev/null; then
     echo "强制停止后端服务..."
     kill -9 $BACKEND_PID 2>/dev/null || true
+    sleep 1
 fi
 
 if [ -n "$FRONTEND_PID" ] && kill -0 $FRONTEND_PID 2>/dev/null; then
     echo "强制停止前端服务..."
     kill -9 $FRONTEND_PID 2>/dev/null || true
+    sleep 1
 fi
+
+# 额外清理：确保所有相关进程都被停止
+echo "🧹 清理所有相关进程..."
+pkill -f "ros_monitor" 2>/dev/null || true
+pkill -f "uvicorn.*ros_monitor" 2>/dev/null || true
+pkill -f "vite.*ros_monitor" 2>/dev/null || true
+sleep 2
 
 # 清理端口配置文件
 rm -f .ros_monitor_ports

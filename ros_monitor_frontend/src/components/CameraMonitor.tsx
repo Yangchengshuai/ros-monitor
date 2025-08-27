@@ -1,51 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { Row, Col, Typography, Space, Card, Statistic, Button } from 'antd';
-import { CameraOutlined, WifiOutlined, ClockCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Typography, Space, Card, Statistic, Alert } from 'antd';
+import { CameraOutlined, ClockCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import CameraViewer from './CameraViewer';
-import { WebSocketService } from '../services/websocket';
+import { wsService } from '../services/websocket';
+import { getConnectionInfo, getNetworkAccessTip } from '../utils/network';
 
 const { Title, Text } = Typography;
 
 export const CameraMonitor: React.FC = () => {
+  const [lastMessage] = useState<any>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [wsError, setWsError] = useState<string | null>(null);
-  const [lastMessage] = useState<any>(null);
-  const [wsService] = useState(() => new WebSocketService());
 
+  // 在组件挂载时建立全局WebSocket连接
   useEffect(() => {
-    // 连接WebSocket
     const connectWebSocket = async () => {
       try {
-        await wsService.connect('localhost', 8000);
+        console.log('CameraMonitor: 开始建立全局WebSocket连接...');
+        await wsService.connect();
         setWsConnected(true);
         setWsError(null);
-        console.log('WebSocket连接成功');
+        console.log('CameraMonitor: 全局WebSocket连接成功');
       } catch (error) {
-        console.error('WebSocket连接失败:', error);
+        console.error('CameraMonitor: 全局WebSocket连接失败:', error);
         setWsError(error instanceof Error ? error.message : '连接失败');
         setWsConnected(false);
       }
     };
 
-    connectWebSocket();
+    // 如果还没有连接，则建立连接
+    if (!wsService.isConnected()) {
+      connectWebSocket();
+    } else {
+      setWsConnected(true);
+      console.log('CameraMonitor: WebSocket已连接');
+    }
 
     // 清理函数
     return () => {
-      wsService.disconnect();
+      // 注意：这里不要断开连接，因为其他组件可能还在使用
+      console.log('CameraMonitor: 组件卸载，保持WebSocket连接');
     };
-  }, [wsService]);
-
-  const handleReconnect = async () => {
-    setWsError(null);
-    try {
-      await wsService.connect('localhost', 8000);
-      setWsConnected(true);
-      setWsError(null);
-    } catch (error) {
-      setWsError(error instanceof Error ? error.message : '重连失败');
-      setWsConnected(false);
-    }
-  };
+  }, []);
 
   return (
     <div style={{ padding: 24 }}>
@@ -67,7 +63,7 @@ export const CameraMonitor: React.FC = () => {
               title="WebSocket连接状态"
               value={wsConnected ? '已连接' : '未连接'}
               valueStyle={{ color: wsConnected ? '#3f8600' : '#cf1322' }}
-              prefix={<WifiOutlined />}
+              prefix={<CameraOutlined />}
             />
           </Card>
         </Col>
@@ -83,33 +79,31 @@ export const CameraMonitor: React.FC = () => {
         <Col span={8}>
           <Card>
             <Statistic
-              title="系统状态"
-              value={wsError ? '错误' : '正常'}
-              valueStyle={{ color: wsError ? '#cf1322' : '#3f8600' }}
+              title="相机数量"
+              value="2"
               prefix={<CameraOutlined />}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* 连接控制 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      {/* 网络连接信息 */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col span={24}>
-          <Card>
-            <Space>
-              <Button 
-                type="primary" 
-                icon={<ReloadOutlined />}
-                onClick={handleReconnect}
-                loading={!wsConnected && !wsError}
-              >
-                {wsConnected ? '重新连接' : '连接'}
-              </Button>
-              <Text type="secondary">
-                WebSocket服务地址: ws://localhost:8000
-              </Text>
-            </Space>
-          </Card>
+          <Alert
+            message="网络连接信息"
+            description={
+              <div>
+                <p><strong>当前状态:</strong> {getConnectionInfo().displayText}</p>
+                <p><strong>WebSocket地址:</strong> {getConnectionInfo().wsUrl}</p>
+                <p><strong>API地址:</strong> {getConnectionInfo().apiUrl}</p>
+                <p><strong>提示:</strong> {getNetworkAccessTip()}</p>
+              </div>
+            }
+            type="info"
+            showIcon
+            icon={<InfoCircleOutlined />}
+          />
         </Col>
       </Row>
 
@@ -143,7 +137,7 @@ export const CameraMonitor: React.FC = () => {
         <Title level={4}>使用说明</Title>
         <Space direction="vertical" size="small">
           <Text>1. 确保后端服务已启动并正常运行</Text>
-          <Text>2. 点击"连接"按钮建立WebSocket连接</Text>
+          <Text>2. 全局WebSocket连接由CameraMonitor管理</Text>
           <Text>3. 点击相机开关开启数据流</Text>
           <Text>4. 使用设置按钮调整图像缩放比例</Text>
           <Text>5. 支持全屏查看和图像下载</Text>

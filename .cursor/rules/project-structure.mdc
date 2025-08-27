@@ -1,0 +1,27 @@
+# ROS监控系统项目结构指南
+
+## 主要组件
+- **后端**: [ros_monitor_backend/](mdc:ros_monitor_backend/) - FastAPI后端服务
+- **前端**: [ros_monitor_frontend/](mdc:ros_monitor_frontend/) - React TypeScript前端
+- **脚本**: [script/](mdc:script/) - 系统启动和停止脚本
+
+## 后端架构
+- 主入口: [ros_monitor_backend/src/main.py](mdc:ros_monitor_backend/src/main.py)
+- API路由: [ros_monitor_backend/src/api/](mdc:ros_monitor_backend/src/api/)
+- ROS桥接: [ros_monitor_backend/src/ros_bridge/](mdc:ros_monitor_backend/src/ros_bridge/)
+- WebSocket: [ros_monitor_backend/src/websocket/](mdc:ros_monitor_backend/src/websocket/)
+
+## 前端架构
+- 主入口: [ros_monitor_frontend/src/main.tsx](mdc:ros_monitor_frontend/src/main.tsx)
+- 组件: [ros_monitor_frontend/src/components/](mdc:ros_monitor_frontend/src/components/)
+- 服务: [ros_monitor_frontend/src/services/](mdc:ros_monitor_frontend/src/services/)
+- 状态管理: [ros_monitor_frontend/src/stores/](mdc:ros_monitor_frontend/src/stores/)
+
+## 启动脚本
+- 完整系统: [start_monitor_system.sh](mdc:start_monitor_system.sh)
+- 后端: [ros_monitor_backend/start_backend.sh](mdc:ros_monitor_backend/start_backend.sh)
+- 前端: [ros_monitor_frontend/start_frontend.sh](mdc:ros_monitor_frontend/start_frontend.sh)
+description:
+globs:
+alwaysApply: true
+---

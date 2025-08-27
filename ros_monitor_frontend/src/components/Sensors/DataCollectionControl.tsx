@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Row, Col, message } from 'antd';
 import { PlayCircleOutlined, StopOutlined, ReloadOutlined } from '@ant-design/icons';
-import { dataCollectionService, type DataCollectionStatus } from '../../services/dataCollection';
+import { dataCollectionService } from '../../services/dataCollection';
+
+// 定义数据采集状态接口
+interface DataCollectionStatus {
+  is_running: boolean;
+  process_id: number | null;
+  start_time: number | null;
+  script_path: string;
+  last_update: number;
+}
 
 interface DataCollectionControlProps {
   className?: string;

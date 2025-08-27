@@ -141,6 +141,8 @@ class ROSNodeManager:
         
     async def get_latest_camera_data(self) -> Optional[Dict[str, Any]]:
         """获取最新相机数据"""
+        logger.debug("🔍 开始获取最新相机数据...")
+        
         camera_data = {}
         
         for topic in self.camera_topics:
@@ -149,12 +151,22 @@ class ROSNodeManager:
                 if data and 'data' in data:
                     camera_id = data['data'].get('camera_id', topic.split('/')[-2])
                     camera_data[camera_id] = data['data']
-                    logger.info(f"获取相机数据: {camera_id}, 帧数: {data['data'].get('sequence', 0)}")
+                    logger.info(f"📷 获取相机数据: {camera_id}, 帧数: {data['data'].get('sequence', 0)}")
+                else:
+                    logger.warning(f"⚠️ 话题 {topic} 数据格式不正确: {data}")
+            else:
+                logger.debug(f"📭 话题 {topic} 暂无数据")
         
         # 如果没有真实数据，返回测试数据
         if not camera_data:
-            logger.warning("没有真实相机数据，返回测试数据")
+            logger.warning("⚠️ 没有真实相机数据，返回测试数据")
             camera_data = await self._get_test_camera_data()
+            if camera_data:
+                logger.info(f"🧪 生成测试相机数据: {list(camera_data.keys())}")
+            else:
+                logger.error("❌ 生成测试相机数据失败")
+        else:
+            logger.info(f"✅ 成功获取相机数据: {list(camera_data.keys())}")
         
         return camera_data if camera_data else None
     

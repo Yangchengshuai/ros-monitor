@@ -1021,7 +1021,7 @@ export class WebSocketService {
         break;
         
       case 'imu_data':
-        this.handleImuData(data);
+        // this.handleImuData(data);
         break;
         
       case 'system_status':
@@ -1054,15 +1054,15 @@ export class WebSocketService {
     });
   }
   
-  private handleImuData(data: any): void {
-    const sensorStore = useSensorStore.getState();
-    sensorStore.updateImuData({
-      timestamp: data.timestamp,
-      orientation: data.orientation,
-      angularVelocity: data.angular_velocity,
-      linearAcceleration: data.linear_acceleration
-    });
-  }
+  // private handleImuData(data: any): void {
+  //   const sensorStore = useSensorStore.getState();
+  //   sensorStore.updateImuData({
+  //     timestamp: data.timestamp,
+  //     orientation: data.orientation,
+  //     angularVelocity: data.angular_velocity,
+  //     linearAcceleration: data.linear_acceleration
+  //   });
+  // }
   
   private handleSystemStatus(data: any): void {
     const systemStore = useSystemStore.getState();

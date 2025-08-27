@@ -1,27 +1,34 @@
-/**
- * 数据采集控制API服务
- * 最小化实现，遵循YAGNI和KISS原则
- */
+import { getApiBaseUrl } from '../utils/network';
 
-export interface DataCollectionStatus {
-  is_running: boolean;
-  process_id: number | null;
-  start_time: number | null;
-  script_path: string;
-  last_update: number;
-}
-
-export interface APIResponse<T = any> {
+export interface APIResponse {
   success: boolean;
   message: string;
-  data?: T;
+  data?: any;
+}
+
+export interface StartRequest {
+  script: string;
+  timeout: number;
+}
+
+export interface StopRequest {
+  force?: boolean;
 }
 
 class DataCollectionService {
-  private baseURL: string;
+  private baseURL: string = '';
 
-  constructor(host: string = 'localhost', port: number = 8000) {
-    this.baseURL = `http://${host}:${port}`;
+  constructor() {
+    // 动态获取当前主机地址和端口
+    this.updateBaseURL();
+  }
+
+  /**
+   * 动态更新API基础URL
+   */
+  private updateBaseURL(): void {
+    this.baseURL = getApiBaseUrl();
+    console.log('🔧 数据采集服务API基础URL已更新:', this.baseURL);
   }
 
   /**
@@ -29,6 +36,9 @@ class DataCollectionService {
    */
   async startCollection(): Promise<APIResponse> {
     try {
+      // 每次请求前更新地址
+      this.updateBaseURL();
+      
       const response = await fetch(`${this.baseURL}/api/v1/data-collection/start`, {
         method: 'POST',
         headers: {
@@ -58,12 +68,17 @@ class DataCollectionService {
    */
   async stopCollection(): Promise<APIResponse> {
     try {
+      // 每次请求前更新地址
+      this.updateBaseURL();
+      
       const response = await fetch(`${this.baseURL}/api/v1/data-collection/stop`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ force: false })
+        body: JSON.stringify({
+          force: false
+        })
       });
 
       if (!response.ok) {
@@ -80,11 +95,19 @@ class DataCollectionService {
   }
 
   /**
-   * 获取采集状态
+   * 获取数据采集状态
    */
-  async getStatus(): Promise<APIResponse<DataCollectionStatus>> {
+  async getStatus(): Promise<APIResponse> {
     try {
-      const response = await fetch(`${this.baseURL}/api/v1/data-collection/status`);
+      // 每次请求前更新地址
+      this.updateBaseURL();
+      
+      const response = await fetch(`${this.baseURL}/api/v1/data-collection/status`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -98,6 +121,31 @@ class DataCollectionService {
       };
     }
   }
+
+  /**
+   * 手动更新API基础URL（兼容旧接口）
+   */
+  updateBaseURLManual(host?: string, port?: number): void {
+    if (host && port) {
+      // 如果提供了具体参数，使用参数
+      this.baseURL = `http://${host}:${port}`;
+    } else {
+      // 否则动态获取
+      this.updateBaseURL();
+    }
+    console.log('🔧 数据采集服务API基础URL已手动更新:', this.baseURL);
+  }
+
+  /**
+   * 获取当前API基础URL
+   */
+  getBaseURL(): string {
+    return this.baseURL;
+  }
 }
 
+// 创建全局数据采集服务实例
 export const dataCollectionService = new DataCollectionService();
+
+// 导出默认实例
+export default dataCollectionService;

@@ -1,5 +1,6 @@
 import { useSensorStore } from '../stores/useSensorStore';
 import { useSystemStore } from '../stores/useSystemStore';
+import { getCurrentHost } from '../utils/network';
 
 export interface WSMessage {
   type: string;
@@ -24,13 +25,19 @@ export class WebSocketService {
     return `frontend_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
   
-  connect(host: string, port: number = 8000): Promise<void> {
+  connect(host?: string, port?: number): Promise<void> {
     if (this.isConnecting) {
       return Promise.reject(new Error('Connection already in progress'));
     }
     
+    // 如果没有指定host，自动获取当前主机地址
+    const targetHost = host || getCurrentHost();
+    
+    // 如果没有指定port，从环境变量获取或使用默认值
+    const targetPort = port || import.meta.env.VITE_WS_PORT || 8000;
+    
     this.isConnecting = true;
-    this.url = `ws://${host}:${port}/ws/${this.clientId}`;
+    this.url = `ws://${targetHost}:${targetPort}/ws/${this.clientId}`;
     
     return new Promise((resolve, reject) => {
       try {
@@ -99,26 +106,50 @@ export class WebSocketService {
         console.log('Topics subscribed:', data.topics);
         break;
         
-
+      case 'subscription_confirmed':
+        console.log('Subscription confirmed:', data);
+        break;
         
       case 'camera':
-        this.handleCameraData(data);
+        // 修复：相机数据在后端的data字段中，需要正确解构
+        if (data && data.camera_id) {
+          this.handleCameraData(data);
+          // 触发自定义事件，让CameraViewer组件能够接收到数据
+          const customEvent = new CustomEvent('websocket-message', {
+            detail: message
+          });
+          window.dispatchEvent(customEvent);
+        } else {
+          console.warn('Invalid camera data format:', data);
+        }
         break;
         
       case 'lidar':
-        this.handleLidarData(data);
+        if (data) {
+          this.handleLidarData(data);
+        } else {
+          console.warn('Invalid lidar data format:', message);
+        }
         break;
         
       case 'system_status':
-        this.handleSystemStatus(data);
+        if (data) {
+          this.handleSystemStatus(data);
+        } else {
+          console.warn('Invalid system status format:', message);
+        }
         break;
         
       case 'ack':
         console.log('Message acknowledged:', data);
         break;
         
+      case 'error':
+        console.error('WebSocket error message:', data);
+        break;
+        
       default:
-        console.warn('Unknown message type:', type);
+        console.warn('Unknown message type:', type, 'with data:', data);
     }
   }
   

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getWebSocketUrl } from '../utils/network';
 
 interface WebSocketMessage {
   type: string;
@@ -12,7 +13,9 @@ interface UseWebSocketReturn {
   lastMessage: WebSocketMessage | null;
 }
 
-export const useWebSocket = (url: string = 'ws://localhost:8000/ws'): UseWebSocketReturn => {
+export const useWebSocket = (url?: string): UseWebSocketReturn => {
+  // 如果没有指定url，使用动态获取的地址
+  const defaultUrl = url || getWebSocketUrl();
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
@@ -25,7 +28,9 @@ export const useWebSocket = (url: string = 'ws://localhost:8000/ws'): UseWebSock
   const connect = useCallback(() => {
     try {
       const clientId = `frontend_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const wsUrl = `${url}/${clientId}`;
+      const wsUrl = `${defaultUrl}/${clientId}`;
+      
+      console.log('useWebSocket connecting to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -70,7 +75,7 @@ export const useWebSocket = (url: string = 'ws://localhost:8000/ws'): UseWebSock
       console.error('Failed to create WebSocket:', error);
       setError('创建WebSocket连接失败');
     }
-  }, [url]);
+  }, [defaultUrl]);
 
   const attemptReconnect = useCallback(() => {
     if (reconnectAttempts.current < maxReconnectAttempts) {

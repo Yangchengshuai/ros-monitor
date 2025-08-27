@@ -1,4 +1,5 @@
 import { useSystemStore } from '../stores/useSystemStore';
+import { getApiBaseUrl } from '../utils/network';
 
 export interface APIHealthResponse {
   success: boolean;
@@ -22,12 +23,21 @@ export interface SystemStatusResponse {
 }
 
 class APIService {
-  private baseURL: string;
+  private baseURL: string = '';
   private healthCheckInterval: number | null = null;
   private isChecking = false;
 
-  constructor(host: string = 'localhost', port: number = 8000) {
-    this.baseURL = `http://${host}:${port}`;
+  constructor() {
+    // 动态获取当前主机地址和端口
+    this.updateBaseURL();
+  }
+
+  /**
+   * 动态更新API基础URL
+   */
+  private updateBaseURL(): void {
+    this.baseURL = getApiBaseUrl();
+    console.log('🔧 API基础URL已更新:', this.baseURL);
   }
 
   /**
@@ -35,6 +45,9 @@ class APIService {
    */
   async checkHealth(): Promise<APIHealthResponse | null> {
     try {
+      // 每次请求前更新地址（确保地址是最新的）
+      this.updateBaseURL();
+      
       const response = await fetch(`${this.baseURL}/api/v1/health`, {
         method: 'GET',
         headers: {
@@ -61,6 +74,9 @@ class APIService {
    */
   async getSystemStatus(): Promise<SystemStatusResponse | null> {
     try {
+      // 每次请求前更新地址
+      this.updateBaseURL();
+      
       const response = await fetch(`${this.baseURL}/api/v1/system/status`, {
         method: 'GET',
         headers: {
@@ -133,13 +149,14 @@ class APIService {
         console.log('✅ API健康检查成功:', {
           api: true,
           ros: rosReady,
-          websocket_clients: healthResponse.websocket_clients
+          websocket_clients: healthResponse.websocket_clients,
+          baseURL: this.baseURL
         });
       } else {
         // API连接失败
         systemStore.updateConnectionStatus('api', false);
         systemStore.updateConnectionStatus('ros', false);
-        console.log('❌ API健康检查失败');
+        console.log('❌ API健康检查失败, baseURL:', this.baseURL);
       }
     } catch (error) {
       console.error('健康检查执行失败:', error);
@@ -149,11 +166,24 @@ class APIService {
   }
 
   /**
-   * 更新API基础URL
+   * 手动更新API基础URL（兼容旧接口）
    */
-  updateBaseURL(host: string, port: number): void {
-    this.baseURL = `http://${host}:${port}`;
-    console.log('API基础URL已更新:', this.baseURL);
+  updateBaseURLManual(host?: string, port?: number): void {
+    if (host && port) {
+      // 如果提供了具体参数，使用参数
+      this.baseURL = `http://${host}:${port}`;
+    } else {
+      // 否则动态获取
+      this.updateBaseURL();
+    }
+    console.log('🔧 API基础URL已手动更新:', this.baseURL);
+  }
+
+  /**
+   * 获取当前API基础URL
+   */
+  getBaseURL(): string {
+    return this.baseURL;
   }
 }
 

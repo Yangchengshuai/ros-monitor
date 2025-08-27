@@ -12,7 +12,7 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 # 允许的脚本目录
-ALLOWED_SCRIPT_DIR = "/home/ycs/work/ikinghandbot/scripts"
+ALLOWED_SCRIPT_DIR = "script"
 ALLOWED_SCRIPTS = {"start_all.sh", "stop_all.sh"}
 
 @dataclass
@@ -35,7 +35,11 @@ class ScriptExecutor:
         if script_name not in ALLOWED_SCRIPTS:
             return False
             
-        full_path = os.path.join(ALLOWED_SCRIPT_DIR, script_name)
+        # 获取项目根目录（从当前文件向上三级）
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+        full_path = os.path.join(project_root, ALLOWED_SCRIPT_DIR, script_name)
+        
         return os.path.isfile(full_path) and os.access(full_path, os.X_OK)
     
     def _check_duplicate_start(self, script_name: str) -> bool:
@@ -69,7 +73,9 @@ class ScriptExecutor:
                 )
             
             # 构建完整路径
-            script_path = os.path.join(ALLOWED_SCRIPT_DIR, script_name)
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+            script_path = os.path.join(project_root, ALLOWED_SCRIPT_DIR, script_name)
             
             # 执行脚本
             logger.info(f"Executing script: {script_path}")

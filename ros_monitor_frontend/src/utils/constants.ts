@@ -1,9 +1,11 @@
 // 应用常量配置
 
+import { getWebSocketUrl, getApiBaseUrl } from './network';
+
 export const config = {
-  // API配置
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001',
-  WS_URL: import.meta.env.VITE_WS_URL || 'ws://localhost:8001',
+  // API配置 - 动态获取主机地址
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || getApiBaseUrl(),
+  WS_URL: import.meta.env.VITE_WS_URL || getWebSocketUrl(),
   
   // 应用配置
   APP_TITLE: import.meta.env.VITE_APP_TITLE || 'ROS远程监控系统',
